@@ -54,7 +54,8 @@ export class GithubPullRequestInfoProvider {
                     throw error;
                 }
             },
-            {timeoutMs: 1000},
+            // github can take several seconds to calculate mergeable state
+            {timeoutMs: 5000},
         );
     }
 }
