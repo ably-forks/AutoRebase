@@ -4,9 +4,11 @@ A GitHub Action that automatically rebases pull requests.
 
 ## Usage
 
-On first run, AutoRebase will create an `autorebase:opt-in` label on your repository.
-Apply this label to pull requests you want to automatically be rebased on their target branch when out-of-date.
-AutoRebase will then try to rebase these pull requests automatically.
+~~On first run, AutoRebase will create an `autorebase:opt-in` label on your repository.~~
+~~Apply this label to pull requests you want to automatically be rebased on their target branch when out-of-date.~~
+~~AutoRebase will then try to rebase these pull requests automatically.~~
+
+_Ably-fork: autorebase will try to rebase any PR that has had auto-merge enabled on it, instead of working off of a label_.
 
 If a pull request cannot be rebased because of merge conflicts, AutoRebase will apply a label `autorebase:non-rebaseable` label to the PR.
 This label will automatically be removed if conflicts are resolved.
