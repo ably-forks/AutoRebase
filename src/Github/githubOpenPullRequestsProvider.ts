@@ -36,6 +36,7 @@ export class GithubOpenPullRequestsProvider implements OpenPullRequestsProvider 
             draft: pullRequest.draft,
             rebaseable: pullRequest.rebaseable,
             mergeableState: pullRequest.mergeableState,
+            autoMerge: pullRequest.autoMerge,
             labels: pullRequest.labels,
         };
     }

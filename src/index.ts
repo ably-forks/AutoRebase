@@ -42,7 +42,6 @@ async function run(): Promise<void> {
         info(`Rebasing ${pullRequests.length} pull requests..`);
         await rebaser.rebasePullRequests(pullRequests);
 
-        await labeler.createOptInLabel(ownerName, repoName);
         await labeler.labelNonRebaseablePullRequests(ownerName, repoName);
         const endLimit = (await github.rateLimit.get()).data.rate;
 

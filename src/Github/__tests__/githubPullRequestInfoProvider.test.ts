@@ -22,6 +22,7 @@ describe('The pull request info is propagated', () => {
                 draft: false,
                 rebaseable: true,
                 mergeableState: mergeableState,
+                autoMerge: false,
                 labels: [],
             });
 
@@ -39,6 +40,7 @@ describe('The pull request info is propagated', () => {
             draft: true,
             rebaseable: true,
             mergeableState: 'unknown',
+            autoMerge: false,
             labels: [],
         });
 
@@ -57,6 +59,7 @@ describe('The pull request info is retried', () => {
             draft: false,
             rebaseable: true,
             mergeableState: mergeableState,
+            autoMerge: false,
             labels: [],
         });
 
@@ -64,6 +67,7 @@ describe('The pull request info is retried', () => {
             draft: false,
             rebaseable: true,
             mergeableState: 'behind',
+            autoMerge: false,
             labels: [],
         });
 
@@ -81,6 +85,7 @@ describe('The pull request info is retried', () => {
                 draft: false,
                 rebaseable: true,
                 mergeableState: 'unknown',
+                autoMerge: false,
                 labels: [],
             });
         }

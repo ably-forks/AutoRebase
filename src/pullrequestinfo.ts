@@ -5,6 +5,7 @@ export type PullRequestInfo = {
     draft: boolean;
     rebaseable: boolean;
     mergeableState: MergeableState;
+    autoMerge: boolean;
     labels: string[];
 };
 

@@ -48,7 +48,8 @@ describe('A pull request gets labeled when', () => {
             draft: false,
             rebaseable: false,
             mergeableState: 'behind',
-            labels: [OPT_IN_LABEL],
+            labels: [],
+            autoMerge: true,
         });
 
         /* When */
@@ -69,6 +70,7 @@ describe('A pull request does not get labeled when', () => {
             draft: false,
             rebaseable: true,
             mergeableState: 'behind',
+            autoMerge: false,
             labels: [],
         });
 
@@ -88,6 +90,7 @@ describe('A pull request does not get labeled when', () => {
             draft: false,
             rebaseable: false,
             mergeableState: 'behind',
+            autoMerge: true,
             labels: [NON_REBASEABLE_LABEL],
         });
 
@@ -109,6 +112,7 @@ describe('A pull request does not get labeled when', () => {
             draft: false,
             rebaseable: false,
             mergeableState: 'behind',
+            autoMerge: false,
             labels: [],
         });
 
@@ -132,6 +136,7 @@ describe('The label gets removed from a pull request when', () => {
             draft: false,
             rebaseable: true,
             mergeableState: 'behind',
+            autoMerge: true,
             labels: [NON_REBASEABLE_LABEL],
         });
 
@@ -153,6 +158,7 @@ describe('The label does not get removed from a pull request when', () => {
             draft: false,
             rebaseable: false,
             mergeableState: 'behind',
+            autoMerge: true,
             labels: [NON_REBASEABLE_LABEL],
         });
 
@@ -172,6 +178,7 @@ describe('The label does not get removed from a pull request when', () => {
             draft: false,
             rebaseable: true,
             mergeableState: 'behind',
+            autoMerge: true,
             labels: [],
         });
 

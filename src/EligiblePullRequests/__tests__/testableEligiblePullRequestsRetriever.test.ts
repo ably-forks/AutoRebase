@@ -36,7 +36,8 @@ describe('A pull request is eligible', () => {
                 draft: false,
                 rebaseable: true,
                 mergeableState: 'behind',
-                labels: [OPT_IN_LABEL],
+                labels: [],
+                autoMerge: true,
             },
         ];
 
@@ -52,7 +53,8 @@ describe('A pull request is eligible', () => {
                 draft: false,
                 rebaseable: true,
                 mergeableState: 'behind',
-                labels: [OPT_IN_LABEL],
+                labels: [],
+                autoMerge: true,
             },
         ]);
     });
@@ -69,7 +71,8 @@ describe('A pull request is not eligible', () => {
                 draft: false,
                 rebaseable: false,
                 mergeableState: 'behind',
-                labels: [OPT_IN_LABEL],
+                labels: [],
+                autoMerge: true,
             },
         ];
 
@@ -92,7 +95,8 @@ describe('A pull request is not eligible', () => {
                     draft: false,
                     rebaseable: true,
                     mergeableState: mergeableState,
-                    labels: [OPT_IN_LABEL],
+                    labels: [],
+                    autoMerge: true,
                 },
             ];
 
@@ -114,6 +118,7 @@ describe('A pull request is not eligible', () => {
                 draft: false,
                 rebaseable: true,
                 mergeableState: 'behind',
+                autoMerge: false,
                 labels: [],
             },
         ];
@@ -135,7 +140,8 @@ describe('A pull request is not eligible', () => {
                 draft: true,
                 rebaseable: true,
                 mergeableState: 'behind',
-                labels: [OPT_IN_LABEL],
+                labels: [],
+                autoMerge: true,
             },
         ];
 

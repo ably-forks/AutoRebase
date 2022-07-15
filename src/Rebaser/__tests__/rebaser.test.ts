@@ -43,6 +43,7 @@ test('A single succeeding rebase completes successfully', async () => {
                 draft: false,
                 rebaseable: true,
                 mergeableState: 'behind',
+                autoMerge: true,
                 labels: [],
             },
         ]);
@@ -70,6 +71,7 @@ test('Failing rebase due to head base change completes successfully', async () =
                 draft: false,
                 rebaseable: true,
                 mergeableState: 'behind',
+                autoMerge: true,
                 labels: [],
             },
         ]);
@@ -97,6 +99,7 @@ test('Failing rebase due unknown failure errors', async () => {
                 draft: false,
                 rebaseable: true,
                 mergeableState: 'behind',
+                autoMerge: true,
                 labels: [],
             },
         ]);

@@ -1,7 +1,7 @@
 import {OpenPullRequestsProvider} from '../EligiblePullRequests/testableEligiblePullRequestsRetriever';
 import {info} from '@actions/core';
 import {PullRequestInfo} from '../pullrequestinfo';
-import {NON_REBASEABLE_LABEL, OPT_IN_LABEL} from '../labels';
+import {NON_REBASEABLE_LABEL} from '../labels';
 
 // Secondary port for Labeler
 export interface LabelPullRequestService {
@@ -20,21 +20,6 @@ export class Labeler {
         private labelPullRequestService: LabelPullRequestService,
     ) {}
 
-    async createOptInLabel(ownerName: string, repoName: string): Promise<void> {
-        const labels = await this.labelPullRequestService.listLabels(ownerName, repoName);
-        if (labels.includes(OPT_IN_LABEL)) {
-            return;
-        }
-
-        await this.labelPullRequestService.createLabel(
-            ownerName,
-            repoName,
-            OPT_IN_LABEL,
-            'c0f276',
-            'Apply this label to enable automatic rebasing',
-        );
-    }
-
     async labelNonRebaseablePullRequests(ownerName: string, repoName: string): Promise<void> {
         const pullRequests = await this.openPullRequestsProvider.openPullRequests(ownerName, repoName);
         await this.addLabels(pullRequests, ownerName, repoName);
@@ -43,10 +28,7 @@ export class Labeler {
 
     private async addLabels(pullRequests: PullRequestInfo[], ownerName: string, repoName: string) {
         const toBeLabeled = pullRequests.filter(
-            (value) =>
-                !value.rebaseable &&
-                !value.labels.includes(NON_REBASEABLE_LABEL) &&
-                value.labels.includes(OPT_IN_LABEL),
+            (value) => !value.rebaseable && !value.labels.includes(NON_REBASEABLE_LABEL) && value.autoMerge,
         );
 
         if (toBeLabeled.length > 0) {
