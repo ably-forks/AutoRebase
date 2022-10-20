@@ -1,6 +1,7 @@
 import {PullRequestInfo} from '../pullrequestinfo';
 import {EligiblePullRequestsRetriever} from './eligiblePullRequestsRetriever';
 import {info} from '@actions/core';
+import {OPT_OUT_LABEL} from '../labels';
 
 // Secondary port for [[TestableEligiblePullRequestsRetriever]]
 export interface OpenPullRequestsProvider {
@@ -29,6 +30,11 @@ export class TestableEligiblePullRequestsRetriever implements EligiblePullReques
     }
 
     private static isEligible(pullRequestInfo: PullRequestInfo): boolean {
+        if (pullRequestInfo.labels.includes(OPT_OUT_LABEL)) {
+            info(`PR #${pullRequestInfo.number} has the opt-out label set; excluding.`);
+            return false;
+        }
+
         if (!pullRequestInfo.autoMerge) {
             info(`PR #${pullRequestInfo.number} does not have automerge enabled.`);
             return false;
