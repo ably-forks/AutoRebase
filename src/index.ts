@@ -40,9 +40,9 @@ async function run(): Promise<void> {
         debug(JSON.stringify((await github.rateLimit.get()).data.rate));
 
         info(`Rebasing ${pullRequests.length} pull requests..`);
-        await rebaser.rebasePullRequests(pullRequests);
+        const rebasedPullRequests = await rebaser.rebasePullRequests(pullRequests);
 
-        await labeler.labelNonRebaseablePullRequests(ownerName, repoName);
+        await labeler.labelNonRebaseablePullRequests(ownerName, repoName, rebasedPullRequests);
         const endLimit = (await github.rateLimit.get()).data.rate;
 
         debug(

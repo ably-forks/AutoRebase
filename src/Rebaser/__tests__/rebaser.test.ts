@@ -15,16 +15,18 @@ const rebaser = new Rebaser(testGithubRebase);
 test('An empty list of pull requests completes successfully', async () => {
     /* Given */
     let error = null;
+    let result: Set<number> | undefined;
 
     /* When */
     try {
-        await rebaser.rebasePullRequests([]);
+        result = await rebaser.rebasePullRequests([]);
     } catch (e) {
         error = e;
     }
 
     /* Then */
     expect(error).toBeNull();
+    expect(result).toEqual(new Set());
 });
 
 test('A single succeeding rebase completes successfully', async () => {
@@ -32,10 +34,11 @@ test('A single succeeding rebase completes successfully', async () => {
     testGithubRebase.result = Promise.resolve('success');
 
     let error = null;
+    let result: Set<number> | undefined;
 
     /* When */
     try {
-        await rebaser.rebasePullRequests([
+        result = await rebaser.rebasePullRequests([
             {
                 ownerName: 'owner',
                 repoName: 'repo',
@@ -53,6 +56,7 @@ test('A single succeeding rebase completes successfully', async () => {
 
     /* Then */
     expect(error).toBeNull();
+    expect(result).toEqual(new Set([3]));
 });
 
 test('Failing rebase due to head base change completes successfully', async () => {
@@ -60,10 +64,11 @@ test('Failing rebase due to head base change completes successfully', async () =
     testGithubRebase.result = Promise.reject('Rebase aborted because the head branch changed');
 
     let error = null;
+    let result: Set<number> | undefined;
 
     /* When */
     try {
-        await rebaser.rebasePullRequests([
+        result = await rebaser.rebasePullRequests([
             {
                 ownerName: 'owner',
                 repoName: 'repo',
@@ -81,6 +86,7 @@ test('Failing rebase due to head base change completes successfully', async () =
 
     /* Then */
     expect(error).toBeNull();
+    expect(result).toEqual(new Set());
 });
 
 test('Failing rebase due unknown failure errors', async () => {

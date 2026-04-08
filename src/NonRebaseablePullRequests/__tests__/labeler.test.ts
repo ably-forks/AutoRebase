@@ -103,6 +103,28 @@ describe('A pull request does not get labeled when', () => {
         expect(addLabelSpy).not.toHaveBeenCalled();
     });
 
+    it('it was recently rebased', async () => {
+        /* Given */
+        pullRequests.set(3, {
+            ownerName: 'owner',
+            repoName: 'repo',
+            number: 3,
+            draft: false,
+            rebaseable: false,
+            mergeableState: 'behind',
+            autoMerge: true,
+            labels: [],
+        });
+
+        const addLabelSpy = spyOn(labelPullRequestService, 'addLabel');
+
+        /* When */
+        await labeler.labelNonRebaseablePullRequests('owner', 'repo', new Set([3]));
+
+        /* Then */
+        expect(addLabelSpy).not.toHaveBeenCalled();
+    });
+
     it(`it is not rebaseable but it does not have the label '${OPT_IN_LABEL}'`, async () => {
         /* Given */
         pullRequests.set(3, {

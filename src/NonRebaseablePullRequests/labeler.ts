@@ -20,15 +20,28 @@ export class Labeler {
         private labelPullRequestService: LabelPullRequestService,
     ) {}
 
-    async labelNonRebaseablePullRequests(ownerName: string, repoName: string): Promise<void> {
+    async labelNonRebaseablePullRequests(
+        ownerName: string,
+        repoName: string,
+        recentlyRebased: Set<number> = new Set(),
+    ): Promise<void> {
         const pullRequests = await this.openPullRequestsProvider.openPullRequests(ownerName, repoName);
-        await this.addLabels(pullRequests, ownerName, repoName);
+        await this.addLabels(pullRequests, ownerName, repoName, recentlyRebased);
         await this.removeLabels(pullRequests, ownerName, repoName);
     }
 
-    private async addLabels(pullRequests: PullRequestInfo[], ownerName: string, repoName: string) {
+    private async addLabels(
+        pullRequests: PullRequestInfo[],
+        ownerName: string,
+        repoName: string,
+        recentlyRebased: Set<number>,
+    ) {
         const toBeLabeled = pullRequests.filter(
-            (value) => !value.rebaseable && !value.labels.includes(NON_REBASEABLE_LABEL) && value.autoMerge,
+            (value) =>
+                !value.rebaseable &&
+                !value.labels.includes(NON_REBASEABLE_LABEL) &&
+                value.autoMerge &&
+                !recentlyRebased.has(value.number),
         );
 
         if (toBeLabeled.length > 0) {
