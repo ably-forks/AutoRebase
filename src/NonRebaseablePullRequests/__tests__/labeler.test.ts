@@ -39,15 +39,14 @@ const labelPullRequestService = new TestLabelPullRequestService();
 const labeler = new Labeler(new TestOpenPullRequestsProvider(), labelPullRequestService);
 
 describe('A pull request gets labeled when', () => {
-    it('it is not rebaseable', async () => {
+    it('it has merge conflicts', async () => {
         /* Given */
         pullRequests.set(3, {
             ownerName: 'owner',
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: false,
-            mergeableState: 'behind',
+            mergeableState: 'dirty',
             labels: [],
             autoMerge: true,
         });
@@ -61,35 +60,35 @@ describe('A pull request gets labeled when', () => {
 });
 
 describe('A pull request does not get labeled when', () => {
-    it('it is rebaseable', async () => {
+    it('it does not have merge conflicts', async () => {
         /* Given */
         pullRequests.set(3, {
             ownerName: 'owner',
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: true,
             mergeableState: 'behind',
-            autoMerge: false,
+            autoMerge: true,
             labels: [],
         });
+
+        const addLabelSpy = spyOn(labelPullRequestService, 'addLabel');
 
         /* When */
         await labeler.labelNonRebaseablePullRequests('owner', 'repo');
 
         /* Then */
-        expect(pullRequests.get(3)!.labels).toStrictEqual([]);
+        expect(addLabelSpy).not.toHaveBeenCalled();
     });
 
-    it('it is not rebaseable but it already has the label', async () => {
+    it('it has merge conflicts but it already has the label', async () => {
         /* Given */
         pullRequests.set(3, {
             ownerName: 'owner',
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: false,
-            mergeableState: 'behind',
+            mergeableState: 'dirty',
             autoMerge: true,
             labels: [NON_REBASEABLE_LABEL],
         });
@@ -110,8 +109,7 @@ describe('A pull request does not get labeled when', () => {
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: false,
-            mergeableState: 'behind',
+            mergeableState: 'dirty',
             autoMerge: true,
             labels: [],
         });
@@ -125,15 +123,14 @@ describe('A pull request does not get labeled when', () => {
         expect(addLabelSpy).not.toHaveBeenCalled();
     });
 
-    it(`it is not rebaseable but it does not have the label '${OPT_IN_LABEL}'`, async () => {
+    it('it does not have automerge enabled', async () => {
         /* Given */
         pullRequests.set(3, {
             ownerName: 'owner',
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: false,
-            mergeableState: 'behind',
+            mergeableState: 'dirty',
             autoMerge: false,
             labels: [],
         });
@@ -149,14 +146,13 @@ describe('A pull request does not get labeled when', () => {
 });
 
 describe('The label gets removed from a pull request when', () => {
-    it('it is rebaseable', async () => {
+    it('it no longer has merge conflicts', async () => {
         /* Given */
         pullRequests.set(3, {
             ownerName: 'owner',
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: true,
             mergeableState: 'behind',
             autoMerge: true,
             labels: [NON_REBASEABLE_LABEL],
@@ -171,15 +167,14 @@ describe('The label gets removed from a pull request when', () => {
 });
 
 describe('The label does not get removed from a pull request when', () => {
-    it('it is not rebaseable', async () => {
+    it('it still has merge conflicts', async () => {
         /* Given */
         pullRequests.set(3, {
             ownerName: 'owner',
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: false,
-            mergeableState: 'behind',
+            mergeableState: 'dirty',
             autoMerge: true,
             labels: [NON_REBASEABLE_LABEL],
         });
@@ -191,14 +186,13 @@ describe('The label does not get removed from a pull request when', () => {
         expect(pullRequests.get(3)!.labels).toStrictEqual([NON_REBASEABLE_LABEL]);
     });
 
-    it('it does not exist', async () => {
+    it('it does not have the label', async () => {
         /* Given */
         pullRequests.set(3, {
             ownerName: 'owner',
             repoName: 'repo',
             number: 3,
             draft: false,
-            rebaseable: true,
             mergeableState: 'behind',
             autoMerge: true,
             labels: [],

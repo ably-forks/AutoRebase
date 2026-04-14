@@ -38,7 +38,7 @@ export class Labeler {
     ) {
         const toBeLabeled = pullRequests.filter(
             (value) =>
-                !value.rebaseable &&
+                value.mergeableState === 'dirty' &&
                 !value.labels.includes(NON_REBASEABLE_LABEL) &&
                 value.autoMerge &&
                 !recentlyRebased.has(value.number),
@@ -73,7 +73,7 @@ export class Labeler {
 
     private async removeLabels(pullRequests: PullRequestInfo[], ownerName: string, repoName: string) {
         const toBeUnlabeled = pullRequests.filter(
-            (value) => value.rebaseable && value.labels.includes(NON_REBASEABLE_LABEL),
+            (value) => value.mergeableState !== 'dirty' && value.labels.includes(NON_REBASEABLE_LABEL),
         );
 
         await Promise.all(

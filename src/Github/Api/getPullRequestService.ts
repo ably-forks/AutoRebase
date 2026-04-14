@@ -7,7 +7,6 @@ export interface GetPullRequestService {
 
 export interface ApiGetPullRequest {
     draft: boolean;
-    rebaseable: boolean;
     mergeableState: MergeableState;
     autoMerge: boolean;
     labels: string[];
@@ -32,7 +31,6 @@ export class GithubGetPullRequestService implements GetPullRequestService {
 
         return {
             draft: data.draft,
-            rebaseable: data.rebaseable,
             mergeableState: data.mergeable_state as MergeableState,
             autoMerge: data.auto_merge,
             labels: data.labels.map((label) => label.name),

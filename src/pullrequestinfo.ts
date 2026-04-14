@@ -3,7 +3,6 @@ export type PullRequestInfo = {
     repoName: string;
     number: number;
     draft: boolean;
-    rebaseable: boolean;
     mergeableState: MergeableState;
     autoMerge: boolean;
     labels: string[];

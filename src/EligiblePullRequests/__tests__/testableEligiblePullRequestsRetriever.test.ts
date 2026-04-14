@@ -26,7 +26,7 @@ test('Without open pull requests there are no eligible pull requests', async () 
 });
 
 describe('A pull request is eligible', () => {
-    it(`when it is rebaseable, the mergeableState is 'behind' and it has the label '${OPT_IN_LABEL}'`, async () => {
+    it(`when the mergeableState is 'behind' and it has automerge enabled`, async () => {
         /* Given */
         testOpenPullRequestsProvider.openPullRequestsValue = [
             {
@@ -34,7 +34,6 @@ describe('A pull request is eligible', () => {
                 repoName: 'repo',
                 number: 3,
                 draft: false,
-                rebaseable: true,
                 mergeableState: 'behind',
                 labels: [],
                 autoMerge: true,
@@ -51,7 +50,6 @@ describe('A pull request is eligible', () => {
                 repoName: 'repo',
                 number: 3,
                 draft: false,
-                rebaseable: true,
                 mergeableState: 'behind',
                 labels: [],
                 autoMerge: true,
@@ -61,28 +59,6 @@ describe('A pull request is eligible', () => {
 });
 
 describe('A pull request is not eligible', () => {
-    it("when it isn't rebaseable", async () => {
-        /* Given */
-        testOpenPullRequestsProvider.openPullRequestsValue = [
-            {
-                ownerName: 'owner',
-                repoName: 'repo',
-                number: 3,
-                draft: false,
-                rebaseable: false,
-                mergeableState: 'behind',
-                labels: [],
-                autoMerge: true,
-            },
-        ];
-
-        /* When */
-        const results = await retriever.findEligiblePullRequests('owner', 'repo');
-
-        /* Then */
-        expect(results).toStrictEqual([]);
-    });
-
     each([['blocked'], ['clean'], ['dirty'], ['unknown'], ['unstable']]).it(
         "when the mergeableState is '%s'",
         async (mergeableState: MergeableState) => {
@@ -93,7 +69,6 @@ describe('A pull request is not eligible', () => {
                     repoName: 'repo',
                     number: 3,
                     draft: false,
-                    rebaseable: true,
                     mergeableState: mergeableState,
                     labels: [],
                     autoMerge: true,
@@ -108,7 +83,7 @@ describe('A pull request is not eligible', () => {
         },
     );
 
-    it(`when it doesn't have the '${OPT_IN_LABEL}' label`, async () => {
+    it(`when it doesn't have automerge enabled`, async () => {
         /* Given */
         testOpenPullRequestsProvider.openPullRequestsValue = [
             {
@@ -116,7 +91,6 @@ describe('A pull request is not eligible', () => {
                 repoName: 'repo',
                 number: 3,
                 draft: false,
-                rebaseable: true,
                 mergeableState: 'behind',
                 autoMerge: false,
                 labels: [],
@@ -138,7 +112,6 @@ describe('A pull request is not eligible', () => {
                 repoName: 'repo',
                 number: 3,
                 draft: true,
-                rebaseable: true,
                 mergeableState: 'behind',
                 labels: [],
                 autoMerge: true,

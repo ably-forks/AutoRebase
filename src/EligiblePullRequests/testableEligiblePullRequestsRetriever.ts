@@ -50,11 +50,6 @@ export class TestableEligiblePullRequestsRetriever implements EligiblePullReques
             return false;
         }
 
-        if (!pullRequestInfo.rebaseable) {
-            info(`PR #${pullRequestInfo.number} is not rebaseable.`);
-            return false;
-        }
-
         return true;
     }
 }

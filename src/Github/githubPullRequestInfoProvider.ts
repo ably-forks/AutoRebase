@@ -14,13 +14,11 @@ export class GithubPullRequestInfoProvider {
         return promiseRetry<PullRequestInfo>(
             async (attemptNumber): Promise<PullRequestInfo> => {
                 try {
-                    const {
-                        draft,
-                        rebaseable,
-                        mergeableState,
-                        labels,
-                        autoMerge,
-                    } = await this.getPullRequestService.getPullRequest(ownerName, repoName, pullRequestNumber);
+                    const {draft, mergeableState, labels, autoMerge} = await this.getPullRequestService.getPullRequest(
+                        ownerName,
+                        repoName,
+                        pullRequestNumber,
+                    );
 
                     if (attemptNumber < 10 && !draft) {
                         if (mergeableState === 'unknown' || !mergeableStates.includes(mergeableState)) {
@@ -31,7 +29,6 @@ export class GithubPullRequestInfoProvider {
                         }
                     }
 
-                    debug(`rebaseable value for pull request #${pullRequestNumber}: ${String(rebaseable)}`);
                     debug(`mergeableState for pull request #${pullRequestNumber}: ${mergeableState}`);
                     debug(`autoMerge for pull request #${pullRequestNumber}: ${String(autoMerge)}`);
 
@@ -40,7 +37,6 @@ export class GithubPullRequestInfoProvider {
                         repoName: repoName,
                         number: pullRequestNumber,
                         draft: draft,
-                        rebaseable: rebaseable,
                         mergeableState: mergeableState,
                         autoMerge: autoMerge,
                         labels: labels,

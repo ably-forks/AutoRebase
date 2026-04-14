@@ -34,7 +34,6 @@ export class GithubOpenPullRequestsProvider implements OpenPullRequestsProvider 
             repoName: repoName,
             number: pullRequest.number,
             draft: pullRequest.draft,
-            rebaseable: pullRequest.rebaseable,
             mergeableState: pullRequest.mergeableState,
             autoMerge: pullRequest.autoMerge,
             labels: pullRequest.labels,

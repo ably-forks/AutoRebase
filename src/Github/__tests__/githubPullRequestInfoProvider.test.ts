@@ -20,7 +20,6 @@ describe('The pull request info is propagated', () => {
             /* Given */
             getPullRequestService.results.push({
                 draft: false,
-                rebaseable: true,
                 mergeableState: mergeableState,
                 autoMerge: false,
                 labels: [],
@@ -38,7 +37,6 @@ describe('The pull request info is propagated', () => {
         /* Given */
         getPullRequestService.results.push({
             draft: true,
-            rebaseable: true,
             mergeableState: 'unknown',
             autoMerge: false,
             labels: [],
@@ -57,7 +55,6 @@ describe('The pull request info is retried', () => {
         /* Given */
         getPullRequestService.results.push({
             draft: false,
-            rebaseable: true,
             mergeableState: mergeableState,
             autoMerge: false,
             labels: [],
@@ -65,7 +62,6 @@ describe('The pull request info is retried', () => {
 
         getPullRequestService.results.push({
             draft: false,
-            rebaseable: true,
             mergeableState: 'behind',
             autoMerge: false,
             labels: [],
@@ -83,7 +79,6 @@ describe('The pull request info is retried', () => {
         for (let i = 0; i < 10; i++) {
             getPullRequestService.results.push({
                 draft: false,
-                rebaseable: true,
                 mergeableState: 'unknown',
                 autoMerge: false,
                 labels: [],

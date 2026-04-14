@@ -18,7 +18,7 @@ module.exports = (function (e, t) {
     }
     __webpack_require__.ab = __dirname + '/';
     function startup() {
-        return __webpack_require__(240);
+        return __webpack_require__(122);
     }
     t(__webpack_require__);
     return startup();
@@ -597,6 +597,314 @@ module.exports = (function (e, t) {
             };
             e.exports = s;
             e.exports.default = s;
+        },
+        122: function (e, t, r) {
+            'use strict';
+            r.r(t);
+            var i = r(470);
+            var n = r(469);
+            class rebaser_Rebaser {
+                constructor(e) {
+                    this.githubRebase = e;
+                }
+                async rebasePullRequests(e) {
+                    const t = new Set();
+                    for (const r of e) {
+                        if (await this.rebase(r)) {
+                            t.add(r.number);
+                        }
+                    }
+                    return t;
+                }
+                async rebase(e) {
+                    Object(i.info)(`Rebasing pull request ${JSON.stringify(e)}`);
+                    try {
+                        await this.githubRebase.rebasePullRequest(e.ownerName, e.number, e.repoName);
+                        Object(i.info)(`${JSON.stringify(e)} was successfully rebased.`);
+                        return true;
+                    } catch (t) {
+                        if (String(t).includes('Rebase aborted because the head branch changed')) {
+                            Object(i.warning)(
+                                `Rebase aborted because the head branch changed for ${JSON.stringify(e)}`,
+                            );
+                            return false;
+                        }
+                        throw new Error(`Error while rebasing for ${JSON.stringify(e)}: ${String(t)}`);
+                    }
+                }
+            }
+            const s = 'autorebase:opt-in';
+            const o = 'autorebase:opt-out';
+            const a = 'autorebase:non-rebaseable';
+            class testableEligiblePullRequestsRetriever_TestableEligiblePullRequestsRetriever {
+                constructor(e) {
+                    this.openPullRequestsProvider = e;
+                }
+                async findEligiblePullRequests(e, t) {
+                    const r = await this.openPullRequestsProvider.openPullRequests(e, t);
+                    Object(i.info)(`Found ${r.length} open pull requests.`);
+                    const n = r.filter((e) => {
+                        return testableEligiblePullRequestsRetriever_TestableEligiblePullRequestsRetriever.isEligible(
+                            e,
+                        );
+                    });
+                    Object(i.info)(`${n.length} pull requests are eligible.`);
+                    return n;
+                }
+                static isEligible(e) {
+                    if (e.labels.includes(o)) {
+                        Object(i.info)(`PR #${e.number} has the opt-out label set; excluding.`);
+                        return false;
+                    }
+                    if (!e.autoMerge) {
+                        Object(i.info)(`PR #${e.number} does not have automerge enabled.`);
+                        return false;
+                    }
+                    if (e.draft) {
+                        Object(i.info)(`PR #${e.number} is a draft PR.`);
+                        return false;
+                    }
+                    if (e.mergeableState !== 'behind') {
+                        Object(i.info)(`PR #${e.number} is not 'behind', but: '${e.mergeableState}'.`);
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            const u = ['behind', 'blocked', 'clean', 'dirty', 'unknown', 'unstable'];
+            async function promiseRetry(e, t = {timeoutMs: 500}, r = 1) {
+                try {
+                    return await e(r);
+                } catch (i) {
+                    if (r === 10) {
+                        throw i;
+                    }
+                    await timeout(t.timeoutMs);
+                    return promiseRetry(e, t, r + 1);
+                }
+            }
+            function timeout(e) {
+                return new Promise((t) => setTimeout(t, e));
+            }
+            class githubPullRequestInfoProvider_GithubPullRequestInfoProvider {
+                constructor(e) {
+                    this.getPullRequestService = e;
+                }
+                pullRequestInfoFor(e, t, r) {
+                    return promiseRetry(
+                        async (n) => {
+                            try {
+                                const {
+                                    draft: s,
+                                    mergeableState: o,
+                                    labels: a,
+                                    autoMerge: p,
+                                } = await this.getPullRequestService.getPullRequest(e, t, r);
+                                if (n < 10 && !s) {
+                                    if (o === 'unknown' || !u.includes(o)) {
+                                        Object(i.info)(
+                                            `${new Date().toString()}: mergeableState for pull request #${r} is '${o}', retrying; attemptNumber = ${n}.`,
+                                        );
+                                        throw Error("mergeableState is 'unknown'");
+                                    }
+                                }
+                                Object(i.debug)(`mergeableState for pull request #${r}: ${o}`);
+                                Object(i.debug)(`autoMerge for pull request #${r}: ${String(p)}`);
+                                return {
+                                    ownerName: e,
+                                    repoName: t,
+                                    number: r,
+                                    draft: s,
+                                    mergeableState: o,
+                                    autoMerge: p,
+                                    labels: a,
+                                };
+                            } catch (e) {
+                                Object(i.debug)(
+                                    `Fetching mergeableState for pull request #${r} failed: "${String(e)}", retrying.`,
+                                );
+                                throw e;
+                            }
+                        },
+                        {timeoutMs: 5e3},
+                    );
+                }
+            }
+            class GithubGetPullRequestService {
+                constructor(e) {
+                    this.github = e;
+                }
+                async getPullRequest(e, t, r) {
+                    const i = await this.github.pulls.get({owner: e, repo: t, pull_number: r});
+                    const n = i.data;
+                    return {
+                        draft: n.draft,
+                        mergeableState: n.mergeable_state,
+                        autoMerge: n.auto_merge,
+                        labels: n.labels.map((e) => e.name),
+                    };
+                }
+            }
+            class GithubListPullRequestsService {
+                constructor(e) {
+                    this.github = e;
+                }
+                async listOpenPullRequests(e, t) {
+                    const r = this.github.pulls.list.endpoint.merge({owner: e, repo: t, state: 'open'});
+                    const i = [];
+                    for await (const e of this.github.paginate.iterator(r)) {
+                        const t = e.data;
+                        i.push(
+                            ...t.map((e) => {
+                                return {number: e.number, labels: e.labels.map((e) => e.name)};
+                            }),
+                        );
+                    }
+                    return i;
+                }
+            }
+            class GithubLabelPullRequestService {
+                constructor(e) {
+                    this.github = e;
+                }
+                async listLabels(e, t) {
+                    const {data: r} = await this.github.issues.listLabelsForRepo({owner: e, repo: t});
+                    return r.map((e) => e.name);
+                }
+                async createLabel(e, t, r, i, n) {
+                    await this.github.issues.createLabel({owner: e, repo: t, name: r, color: i, description: n});
+                }
+                async addLabel(e, t, r, i) {
+                    await this.github.issues.addLabels({owner: e, repo: t, issue_number: r, labels: [i]});
+                }
+                async removeLabel(e, t, r, i) {
+                    await this.github.issues.removeLabel({owner: e, repo: t, issue_number: r, name: i});
+                }
+            }
+            function mapAsync(e, t) {
+                return Promise.all(e.map(t));
+            }
+            async function filterAsync(e, t) {
+                const r = await mapAsync(e, t);
+                return e.filter((e, t) => r[t]);
+            }
+            class githubOpenPullRequestsProvider_GithubOpenPullRequestsProvider {
+                constructor(e, t) {
+                    this.listPullRequestsService = e;
+                    this.mergeableStateProvider = t;
+                }
+                async openPullRequests(e, t) {
+                    const r = await this.listPullRequestsService.listOpenPullRequests(e, t);
+                    return await mapAsync(r, async (r) => {
+                        return this.pullRequestInfoFor(e, t, r);
+                    });
+                }
+                async pullRequestInfoFor(e, t, r) {
+                    const i = await this.mergeableStateProvider.pullRequestInfoFor(e, t, r.number);
+                    return {
+                        ownerName: e,
+                        repoName: t,
+                        number: i.number,
+                        draft: i.draft,
+                        mergeableState: i.mergeableState,
+                        autoMerge: i.autoMerge,
+                        labels: i.labels,
+                    };
+                }
+            }
+            class labeler_Labeler {
+                constructor(e, t) {
+                    this.openPullRequestsProvider = e;
+                    this.labelPullRequestService = t;
+                }
+                async labelNonRebaseablePullRequests(e, t, r = new Set()) {
+                    const i = await this.openPullRequestsProvider.openPullRequests(e, t);
+                    await this.addLabels(i, e, t, r);
+                    await this.removeLabels(i, e, t);
+                }
+                async addLabels(e, t, r, n) {
+                    const s = e.filter(
+                        (e) => e.mergeableState === 'dirty' && !e.labels.includes(a) && e.autoMerge && !n.has(e.number),
+                    );
+                    if (s.length > 0) {
+                        await this.createNonRebaseableLabel(t, r);
+                    }
+                    await Promise.all(
+                        s.map((e) => {
+                            Object(i.info)(`Adding '${a}' label to PR #${e.number}.`);
+                            return this.labelPullRequestService.addLabel(t, r, e.number, a);
+                        }),
+                    );
+                }
+                async createNonRebaseableLabel(e, t) {
+                    const r = await this.labelPullRequestService.listLabels(e, t);
+                    if (r.includes(a)) {
+                        return;
+                    }
+                    await this.labelPullRequestService.createLabel(
+                        e,
+                        t,
+                        a,
+                        'df1d42',
+                        "AutoRebase applies this label when a pull request can't be rebased automatically",
+                    );
+                }
+                async removeLabels(e, t, r) {
+                    const n = e.filter((e) => e.mergeableState !== 'dirty' && e.labels.includes(a));
+                    await Promise.all(
+                        n.map((e) => {
+                            Object(i.info)(`Removing '${a}' label from PR #${e.number}.`);
+                            return this.labelPullRequestService.removeLabel(t, r, e.number, a);
+                        }),
+                    );
+                }
+            }
+            var p = r(261);
+            class githubRebase_RealGithubRebase {
+                constructor(e) {
+                    this.octokit = e;
+                }
+                async rebasePullRequest(e, t, r) {
+                    return Object(p.rebasePullRequest)({
+                        octokit: this.octokit,
+                        owner: e,
+                        pullRequestNumber: t,
+                        repo: r,
+                    });
+                }
+            }
+            async function run() {
+                try {
+                    const e = new n.GitHub(Object(i.getInput)('github_token'));
+                    const t = (await e.rateLimit.get()).data.rate;
+                    Object(i.debug)(`Rate limit at start: ${JSON.stringify(t)}`);
+                    const r = new githubOpenPullRequestsProvider_GithubOpenPullRequestsProvider(
+                        new GithubListPullRequestsService(e),
+                        new githubPullRequestInfoProvider_GithubPullRequestInfoProvider(
+                            new GithubGetPullRequestService(e),
+                        ),
+                    );
+                    const s = new testableEligiblePullRequestsRetriever_TestableEligiblePullRequestsRetriever(r);
+                    const o = new rebaser_Rebaser(new githubRebase_RealGithubRebase(e));
+                    const a = new labeler_Labeler(r, new GithubLabelPullRequestService(e));
+                    const u = n.context.payload;
+                    const p = u.repository.owner.login;
+                    const c = u.repository.name;
+                    Object(i.info)(`Finding eligible pull requests..`);
+                    const d = await s.findEligiblePullRequests(p, c);
+                    Object(i.debug)(JSON.stringify((await e.rateLimit.get()).data.rate));
+                    Object(i.info)(`Rebasing ${d.length} pull requests..`);
+                    const l = await o.rebasePullRequests(d);
+                    await a.labelNonRebaseablePullRequests(p, c, l);
+                    const g = (await e.rateLimit.get()).data.rate;
+                    Object(i.debug)(
+                        `Rate limit at end: ${JSON.stringify(g)} (~${t.remaining - g.remaining} requests*)`,
+                    );
+                } catch (e) {
+                    Object(i.setFailed)(e);
+                }
+            }
+            void run();
         },
         126: function (e) {
             var t = 200;
@@ -1540,311 +1848,6 @@ module.exports = (function (e, t) {
             }
             e.exports.command = escapeCommand;
             e.exports.argument = escapeArgument;
-        },
-        240: function (e, t, r) {
-            'use strict';
-            r.r(t);
-            var i = r(470);
-            var n = r(469);
-            class rebaser_Rebaser {
-                constructor(e) {
-                    this.githubRebase = e;
-                }
-                async rebasePullRequests(e) {
-                    for (const t of e) {
-                        await this.rebase(t);
-                    }
-                }
-                async rebase(e) {
-                    Object(i.info)(`Rebasing pull request ${JSON.stringify(e)}`);
-                    try {
-                        await this.githubRebase.rebasePullRequest(e.ownerName, e.number, e.repoName);
-                        Object(i.info)(`${JSON.stringify(e)} was successfully rebased.`);
-                    } catch (t) {
-                        if (String(t).includes('Rebase aborted because the head branch changed')) {
-                            Object(i.warning)(
-                                `Rebase aborted because the head branch changed for ${JSON.stringify(e)}`,
-                            );
-                            return;
-                        }
-                        throw new Error(`Error while rebasing for ${JSON.stringify(e)}: ${String(t)}`);
-                    }
-                }
-            }
-            class testableEligiblePullRequestsRetriever_TestableEligiblePullRequestsRetriever {
-                constructor(e) {
-                    this.openPullRequestsProvider = e;
-                }
-                async findEligiblePullRequests(e, t) {
-                    const r = await this.openPullRequestsProvider.openPullRequests(e, t);
-                    Object(i.info)(`Found ${r.length} open pull requests.`);
-                    const n = r.filter((e) => {
-                        return testableEligiblePullRequestsRetriever_TestableEligiblePullRequestsRetriever.isEligible(
-                            e,
-                        );
-                    });
-                    Object(i.info)(`${n.length} pull requests are eligible.`);
-                    return n;
-                }
-                static isEligible(e) {
-                    if (!e.autoMerge) {
-                        Object(i.info)(`PR #${e.number} does not have automerge enabled.`);
-                        return false;
-                    }
-                    if (e.draft) {
-                        Object(i.info)(`PR #${e.number} is a draft PR.`);
-                        return false;
-                    }
-                    if (e.mergeableState !== 'behind') {
-                        Object(i.info)(`PR #${e.number} is not 'behind', but: '${e.mergeableState}'.`);
-                        return false;
-                    }
-                    if (!e.rebaseable) {
-                        Object(i.info)(`PR #${e.number} is not rebaseable.`);
-                        return false;
-                    }
-                    return true;
-                }
-            }
-            const s = ['behind', 'blocked', 'clean', 'dirty', 'unknown', 'unstable'];
-            async function promiseRetry(e, t = {timeoutMs: 500}, r = 1) {
-                try {
-                    return await e(r);
-                } catch (i) {
-                    if (r === 10) {
-                        throw i;
-                    }
-                    await timeout(t.timeoutMs);
-                    return promiseRetry(e, t, r + 1);
-                }
-            }
-            function timeout(e) {
-                return new Promise((t) => setTimeout(t, e));
-            }
-            class githubPullRequestInfoProvider_GithubPullRequestInfoProvider {
-                constructor(e) {
-                    this.getPullRequestService = e;
-                }
-                pullRequestInfoFor(e, t, r) {
-                    return promiseRetry(
-                        async (n) => {
-                            try {
-                                const {
-                                    draft: o,
-                                    rebaseable: a,
-                                    mergeableState: u,
-                                    labels: p,
-                                    autoMerge: c,
-                                } = await this.getPullRequestService.getPullRequest(e, t, r);
-                                if (n < 10 && !o) {
-                                    if (u === 'unknown' || !s.includes(u)) {
-                                        Object(i.info)(
-                                            `${new Date().toString()}: mergeableState for pull request #${r} is '${u}', retrying; attemptNumber = ${n}.`,
-                                        );
-                                        throw Error("mergeableState is 'unknown'");
-                                    }
-                                }
-                                Object(i.debug)(`rebaseable value for pull request #${r}: ${String(a)}`);
-                                Object(i.debug)(`mergeableState for pull request #${r}: ${u}`);
-                                Object(i.debug)(`autoMerge for pull request #${r}: ${String(c)}`);
-                                return {
-                                    ownerName: e,
-                                    repoName: t,
-                                    number: r,
-                                    draft: o,
-                                    rebaseable: a,
-                                    mergeableState: u,
-                                    autoMerge: c,
-                                    labels: p,
-                                };
-                            } catch (e) {
-                                Object(i.debug)(
-                                    `Fetching mergeableState for pull request #${r} failed: "${String(e)}", retrying.`,
-                                );
-                                throw e;
-                            }
-                        },
-                        {timeoutMs: 5e3},
-                    );
-                }
-            }
-            class GithubGetPullRequestService {
-                constructor(e) {
-                    this.github = e;
-                }
-                async getPullRequest(e, t, r) {
-                    const i = await this.github.pulls.get({owner: e, repo: t, pull_number: r});
-                    const n = i.data;
-                    return {
-                        draft: n.draft,
-                        rebaseable: n.rebaseable,
-                        mergeableState: n.mergeable_state,
-                        autoMerge: n.auto_merge,
-                        labels: n.labels.map((e) => e.name),
-                    };
-                }
-            }
-            class GithubListPullRequestsService {
-                constructor(e) {
-                    this.github = e;
-                }
-                async listOpenPullRequests(e, t) {
-                    const r = this.github.pulls.list.endpoint.merge({owner: e, repo: t, state: 'open'});
-                    const i = [];
-                    for await (const e of this.github.paginate.iterator(r)) {
-                        const t = e.data;
-                        i.push(
-                            ...t.map((e) => {
-                                return {number: e.number, labels: e.labels.map((e) => e.name)};
-                            }),
-                        );
-                    }
-                    return i;
-                }
-            }
-            class GithubLabelPullRequestService {
-                constructor(e) {
-                    this.github = e;
-                }
-                async listLabels(e, t) {
-                    const {data: r} = await this.github.issues.listLabelsForRepo({owner: e, repo: t});
-                    return r.map((e) => e.name);
-                }
-                async createLabel(e, t, r, i, n) {
-                    await this.github.issues.createLabel({owner: e, repo: t, name: r, color: i, description: n});
-                }
-                async addLabel(e, t, r, i) {
-                    await this.github.issues.addLabels({owner: e, repo: t, issue_number: r, labels: [i]});
-                }
-                async removeLabel(e, t, r, i) {
-                    await this.github.issues.removeLabel({owner: e, repo: t, issue_number: r, name: i});
-                }
-            }
-            function mapAsync(e, t) {
-                return Promise.all(e.map(t));
-            }
-            async function filterAsync(e, t) {
-                const r = await mapAsync(e, t);
-                return e.filter((e, t) => r[t]);
-            }
-            class githubOpenPullRequestsProvider_GithubOpenPullRequestsProvider {
-                constructor(e, t) {
-                    this.listPullRequestsService = e;
-                    this.mergeableStateProvider = t;
-                }
-                async openPullRequests(e, t) {
-                    const r = await this.listPullRequestsService.listOpenPullRequests(e, t);
-                    return await mapAsync(r, async (r) => {
-                        return this.pullRequestInfoFor(e, t, r);
-                    });
-                }
-                async pullRequestInfoFor(e, t, r) {
-                    const i = await this.mergeableStateProvider.pullRequestInfoFor(e, t, r.number);
-                    return {
-                        ownerName: e,
-                        repoName: t,
-                        number: i.number,
-                        draft: i.draft,
-                        rebaseable: i.rebaseable,
-                        mergeableState: i.mergeableState,
-                        autoMerge: i.autoMerge,
-                        labels: i.labels,
-                    };
-                }
-            }
-            const o = 'autorebase:opt-in';
-            const a = 'autorebase:non-rebaseable';
-            class labeler_Labeler {
-                constructor(e, t) {
-                    this.openPullRequestsProvider = e;
-                    this.labelPullRequestService = t;
-                }
-                async labelNonRebaseablePullRequests(e, t) {
-                    const r = await this.openPullRequestsProvider.openPullRequests(e, t);
-                    await this.addLabels(r, e, t);
-                    await this.removeLabels(r, e, t);
-                }
-                async addLabels(e, t, r) {
-                    const n = e.filter((e) => !e.rebaseable && !e.labels.includes(a) && e.autoMerge);
-                    if (n.length > 0) {
-                        await this.createNonRebaseableLabel(t, r);
-                    }
-                    await Promise.all(
-                        n.map((e) => {
-                            Object(i.info)(`Adding '${a}' label to PR #${e.number}.`);
-                            return this.labelPullRequestService.addLabel(t, r, e.number, a);
-                        }),
-                    );
-                }
-                async createNonRebaseableLabel(e, t) {
-                    const r = await this.labelPullRequestService.listLabels(e, t);
-                    if (r.includes(a)) {
-                        return;
-                    }
-                    await this.labelPullRequestService.createLabel(
-                        e,
-                        t,
-                        a,
-                        'df1d42',
-                        "AutoRebase applies this label when a pull request can't be rebased automatically",
-                    );
-                }
-                async removeLabels(e, t, r) {
-                    const n = e.filter((e) => e.rebaseable && e.labels.includes(a));
-                    await Promise.all(
-                        n.map((e) => {
-                            Object(i.info)(`Removing '${a}' label from PR #${e.number}.`);
-                            return this.labelPullRequestService.removeLabel(t, r, e.number, a);
-                        }),
-                    );
-                }
-            }
-            var u = r(261);
-            class githubRebase_RealGithubRebase {
-                constructor(e) {
-                    this.octokit = e;
-                }
-                async rebasePullRequest(e, t, r) {
-                    return Object(u.rebasePullRequest)({
-                        octokit: this.octokit,
-                        owner: e,
-                        pullRequestNumber: t,
-                        repo: r,
-                    });
-                }
-            }
-            async function run() {
-                try {
-                    const e = new n.GitHub(Object(i.getInput)('github_token'));
-                    const t = (await e.rateLimit.get()).data.rate;
-                    Object(i.debug)(`Rate limit at start: ${JSON.stringify(t)}`);
-                    const r = new githubOpenPullRequestsProvider_GithubOpenPullRequestsProvider(
-                        new GithubListPullRequestsService(e),
-                        new githubPullRequestInfoProvider_GithubPullRequestInfoProvider(
-                            new GithubGetPullRequestService(e),
-                        ),
-                    );
-                    const s = new testableEligiblePullRequestsRetriever_TestableEligiblePullRequestsRetriever(r);
-                    const o = new rebaser_Rebaser(new githubRebase_RealGithubRebase(e));
-                    const a = new labeler_Labeler(r, new GithubLabelPullRequestService(e));
-                    const u = n.context.payload;
-                    const p = u.repository.owner.login;
-                    const c = u.repository.name;
-                    Object(i.info)(`Finding eligible pull requests..`);
-                    const d = await s.findEligiblePullRequests(p, c);
-                    Object(i.debug)(JSON.stringify((await e.rateLimit.get()).data.rate));
-                    Object(i.info)(`Rebasing ${d.length} pull requests..`);
-                    await o.rebasePullRequests(d);
-                    await a.labelNonRebaseablePullRequests(p, c);
-                    const l = (await e.rateLimit.get()).data.rate;
-                    Object(i.debug)(
-                        `Rate limit at end: ${JSON.stringify(l)} (~${t.remaining - l.remaining} requests*)`,
-                    );
-                } catch (e) {
-                    Object(i.setFailed)(e);
-                }
-            }
-            void run();
         },
         247: function (e, t, r) {
             'use strict';
